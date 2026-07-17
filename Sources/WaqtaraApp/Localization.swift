@@ -114,8 +114,8 @@ struct L {
         return t("Koreksi Hijriyah: \(v) hari", "Hijri correction: \(v) days")
     }
     var about: String {
-        t("Waqtara — terinspirasi Shollu oleh Ebta Setiawan.\nAudio azan: Internet Archive (public domain/CC0).",
-          "Waqtara — inspired by Shollu by Ebta Setiawan.\nAdhan audio: Internet Archive (public domain/CC0).")
+        t("Waqtara — pengingat waktu sholat untuk macOS.\nAudio azan: Internet Archive (public domain/CC0).",
+          "Waqtara — prayer time reminders for macOS.\nAdhan audio: Internet Archive (public domain/CC0).")
     }
 
     // Notifikasi (fase 1–3, terlewat, uji)

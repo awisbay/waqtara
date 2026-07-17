@@ -1,10 +1,9 @@
 # Waqtara
 
 A macOS menu bar app that reminds you of Islamic prayer times — offline, accurate
-(Kemenag/Indonesia by default), bilingual (English/Indonesian). Inspired by the
-Windows classic **Shollu** by Ebta Setiawan, but stripped down to the one thing that
-matters: a reliable prayer reminder. See [PRD-Waqtara.md](PRD-Waqtara.md) for the full
-product spec (in Indonesian).
+(Kemenag/Indonesia by default), bilingual (English/Indonesian). Focused on one thing:
+a reliable prayer reminder. See [PRD-Waqtara.md](PRD-Waqtara.md) for the full product
+spec (in Indonesian).
 
 ## Features
 
@@ -119,6 +118,5 @@ Replace either file in place (keep the names) to use your own recording.
 - Prayer time engine: [adhan-swift](https://github.com/batoulapps/adhan-swift) (MIT)
 - City coordinates: [GeoNames](https://www.geonames.org/) (CC BY 4.0)
 - Kemenag accuracy reference: [api.myquran.com](https://api.myquran.com) / bimasislam
-- Concept inspiration: Shollu by Ebta Setiawan
 
 Licensed under the [MIT License](LICENSE).

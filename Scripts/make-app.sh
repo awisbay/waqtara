@@ -42,7 +42,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>LSUIElement</key><true/>
     <key>NSLocationWhenInUseUsageDescription</key><string>Waqtara memakai lokasi sekali saja untuk menghitung jadwal sholat di tempat Anda. Koordinat tidak pernah meninggalkan perangkat.</string>
-    <key>NSHumanReadableCopyright</key><string>Terinspirasi Shollu oleh Ebta Setiawan</string>
+    <key>NSHumanReadableCopyright</key><string>© 2026 awisbay</string>
 </dict>
 </plist>
 PLIST

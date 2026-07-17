@@ -16,12 +16,12 @@ enum MenuBarDisplayMode: String, CaseIterable, Codable {
     }
 }
 
-/// Setting aplikasi, tersimpan di UserDefaults (padanan registry Shollu3).
+/// Setting aplikasi, tersimpan di UserDefaults.
 struct AppSettings: Codable, Equatable {
     var location: Location = Location(name: "Jakarta", latitude: -6.2, longitude: 106.85, altitude: 8, timeZoneIdentifier: "Asia/Jakarta")
     var calculation: CalculationSettings = .init()
     var displayMode: MenuBarDisplayMode = .countdown
-    var hijriOffsetDays: Int = 0          // −2…+2 (HijriyahDiff)
+    var hijriOffsetDays: Int = 0          // −2…+2 koreksi tanggal Hijriyah
     var use24Hour: Bool = true
     var onboardingDone: Bool = false
     var reminders: ReminderSettings = .init()

@@ -12,7 +12,7 @@ public enum WaqtaraMethod: String, CaseIterable, Codable, Sendable {
     case custom
 }
 
-/// Pembulatan menit (padanan `Pembulatan` Shollu).
+/// Pembulatan menit.
 public enum RoundingMode: String, Codable, Sendable {
     case nearest, up, down
 }
@@ -53,7 +53,7 @@ public struct PrayerAdjustmentsMinutes: Codable, Equatable, Sendable {
     }
 }
 
-/// Pengingat sholat Jumat (PRD F3, `MJumat`): waktu-waktu N jam sebelum Dzuhur,
+/// Pengingat sholat Jumat (PRD F3): waktu-waktu N jam sebelum Dzuhur,
 /// hanya jika Dzuhur jatuh pada hari Jumat.
 public enum FridayReminder {
     public static func times(dhuhr: Date, hoursBefore: [Int], timeZone: TimeZone) -> [Date] {
@@ -124,7 +124,7 @@ public struct CalculationSettings: Codable, Equatable, Sendable {
     }
 }
 
-/// Jadwal 6 waktu untuk satu hari (padanan record `TSholat` Shollu).
+/// Jadwal 6 waktu untuk satu hari.
 public struct DailySchedule: Equatable, Sendable {
     public let date: DateComponents
     public let location: Location

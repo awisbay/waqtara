@@ -1,6 +1,6 @@
 import Foundation
 
-/// Database kota bawaan (padanan `placenames` Shollu) — PRD F5.
+/// Database kota bawaan (PRD F5).
 public struct City: Codable, Identifiable, Hashable, Sendable {
     public let name: String
     public let country: String
@@ -40,7 +40,7 @@ public struct CityDatabase {
     }
 }
 
-/// Tanggal Hijriyah dengan koreksi manual −2…+2 hari (padanan `HijriyahDiff` Shollu).
+/// Tanggal Hijriyah dengan koreksi manual −2…+2 hari.
 public enum HijriDate {
     public static func string(for date: Date, offsetDays: Int, timeZone: TimeZone, locale: Locale = Locale(identifier: "id_ID")) -> String {
         let adjusted = Calendar.current.date(byAdding: .day, value: offsetDays, to: date) ?? date

@@ -16,7 +16,7 @@ struct ReminderSettings: Codable, Equatable {
     var preAzanMessages: [String: String] = [:]
     var postAzanMessages: [String: String] = [:]
 
-    /// Pengingat sholat Jumat (PRD F3, `MJumat`): notifikasi 2 jam & 1 jam sebelum
+    /// Pengingat sholat Jumat (PRD F3): notifikasi 2 jam & 1 jam sebelum
     /// Dzuhur pada hari Jumat untuk persiapan Jumatan.
     var fridayEnabled = true
     var fridayHoursBefore: [Int] = [2, 1]
@@ -60,9 +60,8 @@ struct ReminderSettings: Codable, Equatable {
     }
 }
 
-/// Menjadwalkan UNNotificationRequest untuk 3 fase reminder tiap waktu sholat.
-/// Meniru Message1 / onAdzanTiba / Message2 Shollu, tapi berbasis penjadwalan OS
-/// (bukan polling per detik) sesuai catatan arsitektur PRD §5.
+/// Menjadwalkan UNNotificationRequest untuk 3 fase reminder tiap waktu sholat,
+/// berbasis penjadwalan OS (bukan polling per detik) sesuai catatan arsitektur PRD §5.
 @MainActor
 final class ReminderEngine: NSObject {
     nonisolated static let categoryID = "waqtara.azan"
