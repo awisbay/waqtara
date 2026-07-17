@@ -264,8 +264,10 @@ final class AppState: ObservableObject {
                          title: l.preTitle(name), message: r.preBody(base: l.preBody(r.preAzanMinutes, name), prayer: prayer),
                          messageProvider: { [weak self] date in
                              guard let self else { return "" }
-                             let minutes = max(0, Int(ceil(time.timeIntervalSince(date) / 60)))
-                             return r.preBody(base: l.preBody(minutes, name), prayer: prayer)
+                             // Hitung mundur menit:detik (khusus pra-azan) yang berdetak tiap detik.
+                             let secs = max(0, Int(time.timeIntervalSince(date).rounded(.down)))
+                             let clock = String(format: "%02d:%02d", secs / 60, secs % 60)
+                             return r.preBody(base: l.preCountdown(clock, name), prayer: prayer)
                          },
                          systemImage: "hourglass", accent: .blue)
             }

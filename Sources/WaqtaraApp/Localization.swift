@@ -121,6 +121,8 @@ struct L {
     // Notifikasi (fase 1–3, terlewat, uji)
     func preTitle(_ prayer: String) -> String { t("Persiapan \(prayer)", "Prepare for \(prayer)") }
     func preBody(_ n: Int, _ prayer: String) -> String { t("\(n) menit lagi waktu \(prayer)", "\(n) minutes until \(prayer)") }
+    /// Hitung mundur pra-azan menit:detik (live di pop-up), mis. "09:45 menuju Shubuh".
+    func preCountdown(_ clock: String, _ prayer: String) -> String { t("\(clock) menuju \(prayer)", "\(clock) until \(prayer)") }
     func azanTitle(_ prayer: String) -> String { t("Waktu \(prayer)", "\(prayer) time") }
     func azanBody(_ prayer: String, _ city: String) -> String {
         t("Telah masuk waktu \(prayer) untuk wilayah \(city)", "It is now time for \(prayer) in \(city)")
