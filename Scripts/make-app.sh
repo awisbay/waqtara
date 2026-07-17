@@ -4,16 +4,20 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-swift build -c release --product Waqtara
+# Universal binary (Apple Silicon + Intel) agar jalan di semua Mac macOS 13+.
+# Set WAQTARA_ARCH=arm64 untuk build satu-arsitektur yang lebih cepat saat development.
+ARCHS="${WAQTARA_ARCH:---arch arm64 --arch x86_64}"
+swift build -c release --product Waqtara $ARCHS
+BIN=$(swift build -c release --product Waqtara $ARCHS --show-bin-path)
 
 APP=dist/Waqtara.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp .build/release/Waqtara "$APP/Contents/MacOS/Waqtara"
+cp "$BIN/Waqtara" "$APP/Contents/MacOS/Waqtara"
 # Resource bundle SPM (cities.json dll.) — accessor mencarinya di Bundle.main.resourceURL.
-cp -R .build/release/Waqtara_WaqtaraCore.bundle "$APP/Contents/Resources/"
-cp -R .build/release/Waqtara_WaqtaraApp.bundle "$APP/Contents/Resources/"
+cp -R "$BIN/Waqtara_WaqtaraCore.bundle" "$APP/Contents/Resources/"
+cp -R "$BIN/Waqtara_WaqtaraApp.bundle" "$APP/Contents/Resources/"
 
 # Ikon app (regenerasi bila belum ada)
 if [ ! -f dist/AppIcon.icns ]; then

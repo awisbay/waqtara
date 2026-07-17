@@ -45,6 +45,10 @@ swift run waqtara-cli -7.25 112.75 Asia/Jakarta Surabaya 2026-06-01
 open dist/Waqtara.app
 ```
 
+`make-app.sh` produces a **universal binary** (Apple Silicon + Intel), so it runs on any
+Mac with macOS 13 Ventura or later. For a faster single-arch dev build:
+`WAQTARA_ARCH=--arch\ arm64 ./Scripts/make-app.sh`.
+
 ## Installing locally (no App Store)
 
 Waqtara ships outside the App Store — the macOS equivalent of a Windows `.exe` is the
