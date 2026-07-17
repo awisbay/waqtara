@@ -79,6 +79,11 @@ struct L {
     var postAzanToggle: String { t("Notifikasi susulan", "Follow-up notification") }
     func minutesAfter(_ n: Int) -> String { t("\(n) menit sesudah azan", "\(n) minutes after adhan") }
     var perPrayerSection: String { t("Reminder per waktu sholat", "Reminders per prayer") }
+    var customMessagePlaceholder: String { t("Pesan tambahan (opsional)", "Extra message (optional)") }
+    var customMessageHint: String {
+        t("Contoh: \"Baca 5 ayat Quran\" atau \"Olahraga 1 menit\".",
+          "e.g. \"Read 5 verses of Quran\" or \"Exercise for 1 minute\".")
+    }
     var testNotification: String { t("Uji Notifikasi", "Test Notification") }
     var fridaySection: String { t("Sholat Jumat", "Friday Prayer") }
     var fridayToggle: String { t("Pengingat Jumat (2 jam & 1 jam sebelum Dzuhur)", "Friday reminder (2h & 1h before Dhuhr)") }

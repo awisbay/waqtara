@@ -11,6 +11,18 @@ struct ReminderSettings: Codable, Equatable {
     /// Toggle per waktu sholat (default semua aktif).
     var enabledPrayers: [String: Bool] = [:]
 
+    /// Pesan tambahan opsional untuk fase pra/pasca-azan (mis. "Baca 5 ayat Quran",
+    /// "Olahraga 1 menit"). Bila diisi, ditambahkan sebagai baris kedua di notifikasi & pop-up.
+    var preAzanMessage = ""
+    var postAzanMessage = ""
+
+    private func appended(_ base: String, _ extra: String) -> String {
+        let trimmed = extra.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? base : base + "\n" + trimmed
+    }
+    func preBody(base: String) -> String { appended(base, preAzanMessage) }
+    func postBody(base: String) -> String { appended(base, postAzanMessage) }
+
     /// Pengingat sholat Jumat (PRD F3, `MJumat`): notifikasi 2 jam & 1 jam sebelum
     /// Dzuhur pada hari Jumat untuk persiapan Jumatan.
     var fridayEnabled = true
@@ -73,7 +85,7 @@ final class ReminderEngine: NSObject {
                 if preTime > now {
                     add(id: "pre-\(prayer.rawValue)-\(dayTag)",
                         title: l.preTitle(name),
-                        body: l.preBody(reminders.preAzanMinutes, name),
+                        body: reminders.preBody(base: l.preBody(reminders.preAzanMinutes, name)),
                         at: preTime, azan: false)
                 }
             }
@@ -88,7 +100,7 @@ final class ReminderEngine: NSObject {
                 if postTime > now && time > now {
                     add(id: "post-\(prayer.rawValue)-\(dayTag)",
                         title: l.postTitle(name),
-                        body: l.postBody(name, reminders.postAzanMinutes),
+                        body: reminders.postBody(base: l.postBody(name, reminders.postAzanMinutes)),
                         at: postTime, azan: false)
                 }
             }

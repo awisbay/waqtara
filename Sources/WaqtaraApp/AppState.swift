@@ -249,12 +249,12 @@ final class AppState: ObservableObject {
             let time = schedule.time(for: prayer)
             if r.preAzanEnabled {
                 addTimer(at: time.addingTimeInterval(-Double(r.preAzanMinutes) * 60),
-                         title: l.preTitle(name), message: l.preBody(r.preAzanMinutes, name),
+                         title: l.preTitle(name), message: r.preBody(base: l.preBody(r.preAzanMinutes, name)),
                          systemImage: "hourglass", accent: .blue)
             }
             if r.postAzanEnabled {
                 addTimer(at: time.addingTimeInterval(Double(r.postAzanMinutes) * 60),
-                         title: l.postTitle(name), message: l.postBody(name, r.postAzanMinutes),
+                         title: l.postTitle(name), message: r.postBody(base: l.postBody(name, r.postAzanMinutes)),
                          systemImage: "bell.badge", accent: .indigo)
             }
         }

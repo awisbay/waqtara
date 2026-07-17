@@ -110,6 +110,9 @@ struct ReminderSettingsView: View {
                 if state.settings.reminders.preAzanEnabled {
                     Stepper(state.l.minutesBefore(state.settings.reminders.preAzanMinutes),
                             value: $state.settings.reminders.preAzanMinutes, in: 5...30, step: 5)
+                    TextField(state.l.customMessagePlaceholder, text: $state.settings.reminders.preAzanMessage,
+                              axis: .vertical)
+                    Text(state.l.customMessageHint).font(.caption).foregroundStyle(.secondary)
                 }
             }
             Section(state.l.phase3) {
@@ -117,6 +120,9 @@ struct ReminderSettingsView: View {
                 if state.settings.reminders.postAzanEnabled {
                     Stepper(state.l.minutesAfter(state.settings.reminders.postAzanMinutes),
                             value: $state.settings.reminders.postAzanMinutes, in: 10...60, step: 5)
+                    TextField(state.l.customMessagePlaceholder, text: $state.settings.reminders.postAzanMessage,
+                              axis: .vertical)
+                    Text(state.l.customMessageHint).font(.caption).foregroundStyle(.secondary)
                 }
             }
             Section(state.l.perPrayerSection) {
