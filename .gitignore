@@ -1,0 +1,14 @@
+# SwiftPM (Package.resolved sengaja di-commit untuk mengunci commit adhan-swift)
+/.build/
+/.swiftpm/
+
+# Build & distribusi output (di-generate ulang oleh Scripts/)
+/dist/
+
+# macOS
+.DS_Store
+
+# Xcode
+*.xcodeproj
+xcuserdata/
+DerivedData/
