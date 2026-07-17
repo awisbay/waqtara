@@ -1,5 +1,43 @@
 import SwiftUI
+import AppKit
 import WaqtaraCore
+
+/// Text field berbasis NSTextField yang dipaksa rata kiri & arah tulisan kiri-ke-kanan.
+/// SwiftUI TextField di dalam Form `.grouped` (macOS 26) mengabaikan
+/// `.multilineTextAlignment(.leading)` dan menaruh teks rata kanan — ini mengatasinya.
+struct PlainTextField: NSViewRepresentable {
+    let placeholder: String
+    @Binding var text: String
+
+    func makeNSView(context: Context) -> NSTextField {
+        let tf = NSTextField(string: text)
+        tf.placeholderString = placeholder
+        tf.alignment = .left
+        tf.baseWritingDirection = .leftToRight
+        tf.bezelStyle = .roundedBezel
+        tf.isBordered = true
+        tf.delegate = context.coordinator
+        tf.font = .systemFont(ofSize: NSFont.systemFontSize)
+        tf.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        return tf
+    }
+
+    func updateNSView(_ tf: NSTextField, context: Context) {
+        if tf.stringValue != text { tf.stringValue = text }
+        tf.alignment = .left
+        tf.baseWritingDirection = .leftToRight
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        @Binding var text: String
+        init(text: Binding<String>) { _text = text }
+        func controlTextDidChange(_ note: Notification) {
+            if let tf = note.object as? NSTextField { text = tf.stringValue }
+        }
+    }
+}
 
 struct SettingsView: View {
     @EnvironmentObject var state: AppState
@@ -113,12 +151,11 @@ struct ReminderSettingsView: View {
         ForEach(messagePrayers, id: \.self) { prayer in
             VStack(alignment: .leading, spacing: 2) {
                 Text(state.prayerName(prayer)).font(.caption).foregroundStyle(.secondary)
-                TextField(state.l.customMessagePlaceholder, text: Binding(
+                PlainTextField(placeholder: state.l.customMessagePlaceholder, text: Binding(
                     get: { state.settings.reminders[keyPath: keyPath][prayer.rawValue] ?? "" },
                     set: { state.settings.reminders[keyPath: keyPath][prayer.rawValue] = $0 }
                 ))
-                .textFieldStyle(.roundedBorder)
-                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity)
             }
         }
     }

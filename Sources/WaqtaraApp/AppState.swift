@@ -175,7 +175,8 @@ final class AppState: ObservableObject {
         if let schedule {
             reminderEngine.reschedule(schedule: schedule, tomorrowSchedule: tomorrow,
                                       reminders: settings.reminders,
-                                      locationName: settings.location.name, l: l)
+                                      locationName: settings.location.name,
+                                      use24Hour: settings.use24Hour, l: l)
         }
         armPrayerTimer()
         armCenterAlertTimers()
@@ -199,7 +200,7 @@ final class AppState: ObservableObject {
                         self.azanPlayer.play(for: prayer, volume: self.settings.azanVolume)
                     }
                     if self.settings.reminders.centerAlertEnabled {
-                        self.showAzanCenterAlert(prayer: prayer)
+                        self.showAzanCenterAlert(prayer: prayer, prayerTime: scheduledTime)
                     }
                 }
                 self.recalculate()  // re-arm untuk waktu berikutnya
@@ -208,11 +209,19 @@ final class AppState: ObservableObject {
         RunLoop.main.add(azanTimer!, forMode: .common)
     }
 
-    private func showAzanCenterAlert(prayer: PrayerName) {
+    private func showAzanCenterAlert(prayer: PrayerName, prayerTime: Date) {
         let name = prayerName(prayer)
+        let loc = settings.location.name
         CenterAlert.show(
             title: l.azanTitle(name),
-            message: l.azanBody(name, settings.location.name),
+            message: l.azanBody(name, loc),
+            // Live: "waktunya" saat tepat, lalu berubah menjadi "telah lewat N menit"
+            // bila pop-up dibiarkan terbuka.
+            messageProvider: { [weak self] date in
+                guard let self else { return "" }
+                let minutes = Int(floor(date.timeIntervalSince(prayerTime) / 60))
+                return minutes <= 0 ? l.azanBody(name, loc) : l.postBody(name, minutes)
+            },
             systemImage: "moon.stars.fill",
             accent: .orange,
             stopTitle: azanPlayer.isPlaying ? l.stopAzan : nil,
@@ -229,12 +238,14 @@ final class AppState: ObservableObject {
         guard settings.reminders.centerAlertEnabled, let schedule else { return }
         let r = settings.reminders
 
-        func addTimer(at date: Date, title: String, message: String, systemImage: String, accent: Color) {
+        func addTimer(at date: Date, title: String, message: String,
+                      messageProvider: (@MainActor @Sendable (Date) -> String)? = nil,
+                      systemImage: String, accent: Color) {
             guard date.timeIntervalSinceNow > 0 else { return }
             let timer = Timer(fire: date, interval: 0, repeats: false) { [weak self] _ in
                 Task { @MainActor in
                     guard let self else { return }
-                    CenterAlert.show(title: title, message: message,
+                    CenterAlert.show(title: title, message: message, messageProvider: messageProvider,
                                      systemImage: systemImage, accent: accent,
                                      dismissTitle: self.l.dismiss)
                 }
@@ -248,13 +259,25 @@ final class AppState: ObservableObject {
             let name = prayerName(prayer)
             let time = schedule.time(for: prayer)
             if r.preAzanEnabled {
-                addTimer(at: time.addingTimeInterval(-Double(r.preAzanMinutes) * 60),
+                let preDate = time.addingTimeInterval(-Double(r.preAzanMinutes) * 60)
+                addTimer(at: preDate,
                          title: l.preTitle(name), message: r.preBody(base: l.preBody(r.preAzanMinutes, name), prayer: prayer),
+                         messageProvider: { [weak self] date in
+                             guard let self else { return "" }
+                             let minutes = max(0, Int(ceil(time.timeIntervalSince(date) / 60)))
+                             return r.preBody(base: l.preBody(minutes, name), prayer: prayer)
+                         },
                          systemImage: "hourglass", accent: .blue)
             }
             if r.postAzanEnabled {
-                addTimer(at: time.addingTimeInterval(Double(r.postAzanMinutes) * 60),
+                let postDate = time.addingTimeInterval(Double(r.postAzanMinutes) * 60)
+                addTimer(at: postDate,
                          title: l.postTitle(name), message: r.postBody(base: l.postBody(name, r.postAzanMinutes), prayer: prayer),
+                         messageProvider: { [weak self] date in
+                             guard let self else { return "" }
+                             let minutes = max(0, Int(floor(date.timeIntervalSince(time) / 60)))
+                             return r.postBody(base: l.postBody(name, minutes), prayer: prayer)
+                         },
                          systemImage: "bell.badge", accent: .indigo)
             }
         }

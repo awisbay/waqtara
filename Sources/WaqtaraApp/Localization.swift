@@ -126,6 +126,10 @@ struct L {
         t("Telah masuk waktu \(prayer) untuk wilayah \(city)", "It is now time for \(prayer) in \(city)")
     }
     func postTitle(_ prayer: String) -> String { t("Pengingat \(prayer)", "\(prayer) reminder") }
+    // Notifikasi OS (banner) — jam absolut, tidak pernah basi karena tak bisa dihitung ulang live.
+    func preAt(_ prayer: String, _ time: String) -> String { t("\(prayer) pukul \(time)", "\(prayer) at \(time)") }
+    func postAt(_ prayer: String, _ time: String) -> String { t("\(prayer) tadi pukul \(time)", "\(prayer) was at \(time)") }
+    func fridayAt(_ time: String) -> String { t("Dzuhur pukul \(time)", "Dhuhr at \(time)") }
     func postBody(_ prayer: String, _ n: Int) -> String {
         t("Waktu \(prayer) telah lewat \(n) menit", "\(prayer) time was \(n) minutes ago")
     }

@@ -85,12 +85,18 @@ final class ReminderEngine: NSObject {
 
     /// Jadwalkan ulang semua notifikasi: hari ini (yang belum lewat) + Shubuh besok.
     /// Dipanggil saat: launch, ganti setting, wake dari sleep, tengah malam.
-    func reschedule(schedule: DailySchedule, tomorrowSchedule: DailySchedule?, reminders: ReminderSettings, locationName: String, l: L) {
+    func reschedule(schedule: DailySchedule, tomorrowSchedule: DailySchedule?, reminders: ReminderSettings, locationName: String, use24Hour: Bool, l: L) {
         center.removeAllPendingNotificationRequests()
         // Perbarui judul tombol [Stop Azan] sesuai bahasa aktif.
         let stop = UNNotificationAction(identifier: Self.stopActionID, title: l.stopAzan, options: [])
         center.setNotificationCategories([UNNotificationCategory(identifier: Self.categoryID, actions: [stop], intentIdentifiers: [])])
         let now = Date()
+
+        // Jam absolut untuk teks notifikasi OS — banner tidak bisa dihitung ulang live,
+        // jadi tampilkan pukul berapa (bukan "N menit lagi" yang cepat basi).
+        let timeFmt = DateFormatter()
+        timeFmt.dateFormat = use24Hour ? "HH:mm" : "h:mm a"
+        timeFmt.timeZone = schedule.location.timeZone
 
         var entries: [(PrayerName, Date)] = PrayerName.allCases
             .filter { $0 != .terbit && reminders.isEnabled($0) }
@@ -108,7 +114,7 @@ final class ReminderEngine: NSObject {
                 if preTime > now {
                     add(id: "pre-\(prayer.rawValue)-\(dayTag)",
                         title: l.preTitle(name),
-                        body: reminders.preBody(base: l.preBody(reminders.preAzanMinutes, name), prayer: prayer),
+                        body: reminders.preBody(base: l.preAt(name, timeFmt.string(from: time)), prayer: prayer),
                         at: preTime, azan: false)
                 }
             }
@@ -123,7 +129,7 @@ final class ReminderEngine: NSObject {
                 if postTime > now && time > now {
                     add(id: "post-\(prayer.rawValue)-\(dayTag)",
                         title: l.postTitle(name),
-                        body: reminders.postBody(base: l.postBody(name, reminders.postAzanMinutes), prayer: prayer),
+                        body: reminders.postBody(base: l.postAt(name, timeFmt.string(from: time)), prayer: prayer),
                         at: postTime, azan: false)
                 }
             }
@@ -138,7 +144,7 @@ final class ReminderEngine: NSObject {
             for (h, t) in zip(reminders.fridayHoursBefore, times) where t > now {
                 add(id: "friday-\(h)-\(dayTag)",
                     title: l.fridayTitle,
-                    body: l.fridayBody(h),
+                    body: l.fridayAt(timeFmt.string(from: dhuhr)),
                     at: t, azan: false)
             }
         }
