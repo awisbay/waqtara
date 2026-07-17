@@ -157,6 +157,13 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Pilih lokasi baru dan sekaligus terapkan preset metode kalkulasi menurut negaranya
+    /// (Indonesia → Kemenag, lainnya → MWL), mempertahankan madhab pilihan pengguna.
+    func selectLocation(_ location: Location, country: String) {
+        settings.calculation = .regional(country: country, madhab: settings.calculation.madhab)
+        settings.location = location
+    }
+
     func recalculate() {
         now = Date()
         lastSeen = now

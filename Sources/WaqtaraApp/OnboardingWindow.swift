@@ -19,8 +19,9 @@ enum LaunchAtLogin {
 /// Deteksi lokasi sekali-pakai via CoreLocation (PRD F5) — tanpa tracking berkelanjutan.
 @MainActor
 final class LocationDetector: NSObject, ObservableObject, CLLocationManagerDelegate {
+    struct Detected { let location: Location; let country: String }
     @Published var status: String?
-    @Published var detected: Location?
+    @Published var detected: Detected?
 
     // Diisi pemanggil sesuai bahasa aktif sebelum detect().
     var statusDetecting = "Mendeteksi lokasi…"
@@ -38,14 +39,16 @@ final class LocationDetector: NSObject, ObservableObject, CLLocationManagerDeleg
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.first else { return }
         CLGeocoder().reverseGeocodeLocation(loc) { placemarks, _ in
-            let name = placemarks?.first?.locality ?? placemarks?.first?.administrativeArea ?? "Lokasi Saya"
+            let name = placemarks?.first?.locality ?? placemarks?.first?.administrativeArea ?? "My Location"
             let tz = placemarks?.first?.timeZone?.identifier ?? TimeZone.current.identifier
+            let country = placemarks?.first?.isoCountryCode ?? ""
+            let location = Location(name: name,
+                                    latitude: loc.coordinate.latitude,
+                                    longitude: loc.coordinate.longitude,
+                                    altitude: loc.altitude,
+                                    timeZoneIdentifier: tz)
             Task { @MainActor in
-                self.detected = Location(name: name,
-                                         latitude: loc.coordinate.latitude,
-                                         longitude: loc.coordinate.longitude,
-                                         altitude: loc.altitude,
-                                         timeZoneIdentifier: tz)
+                self.detected = Detected(location: location, country: country)
                 self.status = nil
             }
         }
@@ -124,7 +127,7 @@ struct OnboardingView: View {
                     if state.settings.location.name == city.name { Image(systemName: "checkmark") }
                 }
                 .contentShape(Rectangle())
-                .onTapGesture { state.settings.location = city.location }
+                .onTapGesture { state.selectLocation(city.location, country: city.country) }
             }
             .frame(height: 150)
             // Preview jadwal hari ini sebagai konfirmasi visual.
@@ -136,8 +139,8 @@ struct OnboardingView: View {
                     .font(.caption)
             }
         }
-        .onReceive(detector.$detected) { loc in
-            if let loc { state.settings.location = loc }
+        .onReceive(detector.$detected) { d in
+            if let d { state.selectLocation(d.location, country: d.country) }
         }
     }
 

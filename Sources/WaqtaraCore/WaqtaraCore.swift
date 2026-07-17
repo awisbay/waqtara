@@ -95,6 +95,22 @@ public struct CalculationSettings: Codable, Equatable, Sendable {
         self.adjustments = adjustments
         self.rounding = rounding
     }
+
+    /// Preset default menurut negara lokasi, mempertahankan pilihan madhab pengguna.
+    /// - Indonesia: metode Kemenag + ikhtiyati kalibrasi Kemenag + pembulatan ke atas.
+    /// - Negara lain: Muslim World League tanpa ikhtiyati + pembulatan normal — cocok
+    ///   dengan jadwal internasional umum (mis. Google) dalam ~1 menit.
+    /// Madhab Ashar tidak diubah karena itu pilihan fikih, bukan geografi.
+    public static func regional(country: String, madhab: AsrMadhab) -> CalculationSettings {
+        if country.uppercased() == "ID" {
+            return CalculationSettings(method: .kemenag, madhab: madhab)
+        }
+        return CalculationSettings(
+            method: .muslimWorldLeague,
+            madhab: madhab,
+            adjustments: PrayerAdjustmentsMinutes(shubuh: 0, terbit: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0),
+            rounding: .nearest)
+    }
 }
 
 /// Jadwal 6 waktu untuk satu hari (padanan record `TSholat` Shollu).

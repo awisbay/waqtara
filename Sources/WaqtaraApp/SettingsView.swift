@@ -38,7 +38,7 @@ struct LocationSettingsView: View {
                     }
                 }
                 .contentShape(Rectangle())
-                .onTapGesture { state.settings.location = city.location }
+                .onTapGesture { state.selectLocation(city.location, country: city.country) }
             }
             Text("\(state.l.coordinates): \(state.settings.location.latitude, specifier: "%.2f"), \(state.settings.location.longitude, specifier: "%.2f") · \(state.settings.location.timeZoneIdentifier)")
                 .font(.caption).foregroundStyle(.secondary)

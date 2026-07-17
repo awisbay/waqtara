@@ -107,4 +107,50 @@ final class PrayerTimeCalculatorTests: XCTestCase {
         XCTAssertEqual(results.first?.name, "Jakarta")
         XCTAssertFalse(db.search("SURABAYA").isEmpty)
     }
+
+    /// Preset default per negara: Indonesia → Kemenag (dengan ikhtiyati & round up),
+    /// negara lain → MWL tanpa ikhtiyati & round nearest. Madhab dipertahankan.
+    func testRegionalPreset() {
+        let id = CalculationSettings.regional(country: "ID", madhab: .shafi)
+        XCTAssertEqual(id.method, .kemenag)
+        XCTAssertEqual(id.rounding, .up)
+        XCTAssertEqual(id.adjustments.dzuhur, 3)
+
+        let world = CalculationSettings.regional(country: "BR", madhab: .hanafi)
+        XCTAssertEqual(world.method, .muslimWorldLeague)
+        XCTAssertEqual(world.rounding, .nearest)
+        XCTAssertEqual(world.adjustments, PrayerAdjustmentsMinutes(shubuh: 0, terbit: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0))
+        XCTAssertEqual(world.madhab, .hanafi)  // pilihan fikih tidak diubah oleh geografi
+    }
+
+    /// Kota dunia dengan preset MWL (metode yang dipakai jadwal internasional/Google).
+    /// Nilai referensi = Google, 17 Juli 2026. Google memakai madhab Ashar Hanafi.
+    func testWorldCitiesMatchInternational() throws {
+        struct Case { let name: String; let loc: Location; let google: [PrayerName: String] }
+        let cases = [
+            Case(name: "Rio de Janeiro",
+                 loc: Location(name: "Rio", latitude: -22.9064, longitude: -43.1822, timeZoneIdentifier: "America/Sao_Paulo"),
+                 google: [.shubuh: "05:14", .terbit: "06:33", .dzuhur: "11:59", .ashar: "15:50", .maghrib: "17:25", .isya: "18:40"]),
+            Case(name: "Auckland",
+                 loc: Location(name: "Auckland", latitude: -36.8485, longitude: 174.7635, timeZoneIdentifier: "Pacific/Auckland"),
+                 google: [.shubuh: "05:59", .terbit: "07:30", .dzuhur: "12:27", .ashar: "15:45", .maghrib: "17:24", .isya: "18:50"]),
+            Case(name: "Johannesburg",
+                 loc: Location(name: "Joburg", latitude: -26.2023, longitude: 28.0436, timeZoneIdentifier: "Africa/Johannesburg"),
+                 google: [.shubuh: "05:33", .terbit: "06:54", .dzuhur: "12:14", .ashar: "15:58", .maghrib: "17:34", .isya: "18:51"]),
+        ]
+        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
+        var settings = CalculationSettings.regional(country: "BR", madhab: .hanafi)
+        _ = settings
+        for c in cases {
+            df.timeZone = c.loc.timeZone
+            let date = try XCTUnwrap(df.date(from: "2026-07-17"))
+            let calc = PrayerTimeCalculator(settings: CalculationSettings.regional(country: c.loc.name, madhab: .hanafi))
+            let schedule = try calc.schedule(for: date, at: c.loc)
+            for (prayer, expected) in c.google {
+                let got = minutesOfDay(schedule.time(for: prayer), tz: c.loc.timeZone)
+                let diff = abs(got - minutes(expected))
+                XCTAssertLessThanOrEqual(diff, 2, "\(c.name) \(prayer.rawValue): google \(expected), diff \(diff) min")
+            }
+        }
+    }
 }

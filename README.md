@@ -65,6 +65,21 @@ Asr +2, Maghrib +3, Isha +2, rounding **up**).
 - Across the broader bundled database, spot checks land within **~1–5 minutes**. Users can
   fine-tune any city with the per-prayer ihtiyati offsets in Settings.
 
+### Method preset by region
+
+Picking a city applies a sensible method automatically, while keeping your Asr madhab
+choice untouched (madhab is a fiqh choice, not geography):
+
+- **Indonesia** → Kemenag (Fajr 20°/Isha 18°) with the calibrated ihtiyati offsets.
+- **Everywhere else** → Muslim World League with no offsets — this matches common
+  international schedules (e.g. Google) to within ~1 minute for Rio de Janeiro, Auckland,
+  and Johannesburg. Cities in countries with their own authority (Turkey's Diyanet,
+  like Indonesia's Kemenag) may differ by a few minutes; switch method manually if needed.
+
+Note: Google's international times use the **Hanafi** Asr; Waqtara defaults to **Shafi**
+(the majority choice for its Indonesian audience). Set madhab to Hanafi in Settings to
+match Google's Asr exactly.
+
 The city database (`Sources/WaqtaraCore/Resources/cities.json`) is generated from the
 [GeoNames](https://www.geonames.org/) `cities15000` dataset (licensed CC BY 4.0):
 
