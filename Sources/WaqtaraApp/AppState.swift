@@ -88,7 +88,7 @@ final class AppState: ObservableObject {
 
     private var tickTimer: Timer?
     private var azanTimer: Timer?
-    private var fridayTimers: [Timer] = []
+    private var alertTimers: [Timer] = []
     private var wakeObserver: NSObjectProtocol?
     private var sleepObserver: NSObjectProtocol?
     private var playerSink: AnyCancellable?
@@ -178,7 +178,7 @@ final class AppState: ObservableObject {
                                       locationName: settings.location.name, l: l)
         }
         armPrayerTimer()
-        armFridayTimers()
+        armCenterAlertTimers()
     }
 
     /// Timer presisi satu-tembakan pada waktu sholat berikutnya: memutar azan (jika aktif)
@@ -220,30 +220,54 @@ final class AppState: ObservableObject {
             dismissTitle: l.dismiss)
     }
 
-    /// Pop-up tengah layar untuk pengingat Jumat (2 jam & 1 jam sebelum Dzuhur).
-    private func armFridayTimers() {
-        fridayTimers.forEach { $0.invalidate() }
-        fridayTimers = []
-        guard settings.reminders.fridayEnabled, settings.reminders.centerAlertEnabled,
-              let schedule else { return }
-        let dhuhr = schedule.time(for: .dzuhur)
-        let times = FridayReminder.times(dhuhr: dhuhr, hoursBefore: settings.reminders.fridayHoursBefore,
-                                         timeZone: settings.location.timeZone)
-        for (h, t) in zip(settings.reminders.fridayHoursBefore, times) {
-            guard t.timeIntervalSinceNow > 0 else { continue }
-            let hours = h
-            let timer = Timer(fire: t, interval: 0, repeats: false) { [weak self] _ in
+    /// Pop-up tengah layar untuk fase pra-azan & pasca-azan tiap waktu sholat, plus
+    /// pengingat Jumat. Fase azan (fase 2) ditangani armPrayerTimer agar tombol Stop
+    /// tersinkron dengan pemutaran audio.
+    private func armCenterAlertTimers() {
+        alertTimers.forEach { $0.invalidate() }
+        alertTimers = []
+        guard settings.reminders.centerAlertEnabled, let schedule else { return }
+        let r = settings.reminders
+
+        func addTimer(at date: Date, title: String, message: String, systemImage: String, accent: Color) {
+            guard date.timeIntervalSinceNow > 0 else { return }
+            let timer = Timer(fire: date, interval: 0, repeats: false) { [weak self] _ in
                 Task { @MainActor in
                     guard let self else { return }
-                    CenterAlert.show(title: self.l.fridayTitle,
-                                     message: self.l.fridayBody(hours),
-                                     systemImage: "figure.walk",
-                                     accent: .green,
+                    CenterAlert.show(title: title, message: message,
+                                     systemImage: systemImage, accent: accent,
                                      dismissTitle: self.l.dismiss)
                 }
             }
             RunLoop.main.add(timer, forMode: .common)
-            fridayTimers.append(timer)
+            alertTimers.append(timer)
+        }
+
+        // Fase 1 (pra-azan) & fase 3 (pasca-azan) untuk tiap waktu sholat aktif.
+        for prayer in PrayerName.allCases where prayer != .terbit && r.isEnabled(prayer) {
+            let name = prayerName(prayer)
+            let time = schedule.time(for: prayer)
+            if r.preAzanEnabled {
+                addTimer(at: time.addingTimeInterval(-Double(r.preAzanMinutes) * 60),
+                         title: l.preTitle(name), message: l.preBody(r.preAzanMinutes, name),
+                         systemImage: "hourglass", accent: .blue)
+            }
+            if r.postAzanEnabled {
+                addTimer(at: time.addingTimeInterval(Double(r.postAzanMinutes) * 60),
+                         title: l.postTitle(name), message: l.postBody(name, r.postAzanMinutes),
+                         systemImage: "bell.badge", accent: .indigo)
+            }
+        }
+
+        // Pengingat Jumat (2 jam & 1 jam sebelum Dzuhur).
+        if r.fridayEnabled {
+            let times = FridayReminder.times(dhuhr: schedule.time(for: .dzuhur),
+                                             hoursBefore: r.fridayHoursBefore,
+                                             timeZone: settings.location.timeZone)
+            for (h, t) in zip(r.fridayHoursBefore, times) {
+                addTimer(at: t, title: l.fridayTitle, message: l.fridayBody(h),
+                         systemImage: "figure.walk", accent: .green)
+            }
         }
     }
 
