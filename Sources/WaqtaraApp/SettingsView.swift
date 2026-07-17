@@ -103,6 +103,26 @@ struct CalculationSettingsView: View {
 struct ReminderSettingsView: View {
     @EnvironmentObject var state: AppState
 
+    private let messagePrayers: [PrayerName] = [.shubuh, .dzuhur, .ashar, .maghrib, .isya]
+
+    /// Field pesan kustom per waktu sholat. Label di atas, teks rata kiri (rounded border)
+    /// agar tidak dipakai sebagai label baris Form yang membuat teks rata kanan.
+    @ViewBuilder
+    private func perPrayerMessages(keyPath: WritableKeyPath<ReminderSettings, [String: String]>) -> some View {
+        Text(state.l.customMessageHint).font(.caption).foregroundStyle(.secondary)
+        ForEach(messagePrayers, id: \.self) { prayer in
+            VStack(alignment: .leading, spacing: 2) {
+                Text(state.prayerName(prayer)).font(.caption).foregroundStyle(.secondary)
+                TextField(state.l.customMessagePlaceholder, text: Binding(
+                    get: { state.settings.reminders[keyPath: keyPath][prayer.rawValue] ?? "" },
+                    set: { state.settings.reminders[keyPath: keyPath][prayer.rawValue] = $0 }
+                ))
+                .textFieldStyle(.roundedBorder)
+                .multilineTextAlignment(.leading)
+            }
+        }
+    }
+
     var body: some View {
         Form {
             Section(state.l.phase1) {
@@ -110,9 +130,7 @@ struct ReminderSettingsView: View {
                 if state.settings.reminders.preAzanEnabled {
                     Stepper(state.l.minutesBefore(state.settings.reminders.preAzanMinutes),
                             value: $state.settings.reminders.preAzanMinutes, in: 5...30, step: 5)
-                    TextField(state.l.customMessagePlaceholder, text: $state.settings.reminders.preAzanMessage,
-                              axis: .vertical)
-                    Text(state.l.customMessageHint).font(.caption).foregroundStyle(.secondary)
+                    perPrayerMessages(keyPath: \.preAzanMessages)
                 }
             }
             Section(state.l.phase3) {
@@ -120,9 +138,7 @@ struct ReminderSettingsView: View {
                 if state.settings.reminders.postAzanEnabled {
                     Stepper(state.l.minutesAfter(state.settings.reminders.postAzanMinutes),
                             value: $state.settings.reminders.postAzanMinutes, in: 10...60, step: 5)
-                    TextField(state.l.customMessagePlaceholder, text: $state.settings.reminders.postAzanMessage,
-                              axis: .vertical)
-                    Text(state.l.customMessageHint).font(.caption).foregroundStyle(.secondary)
+                    perPrayerMessages(keyPath: \.postAzanMessages)
                 }
             }
             Section(state.l.perPrayerSection) {

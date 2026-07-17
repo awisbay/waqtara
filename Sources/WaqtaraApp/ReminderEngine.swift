@@ -11,17 +11,10 @@ struct ReminderSettings: Codable, Equatable {
     /// Toggle per waktu sholat (default semua aktif).
     var enabledPrayers: [String: Bool] = [:]
 
-    /// Pesan tambahan opsional untuk fase pra/pasca-azan (mis. "Baca 5 ayat Quran",
-    /// "Olahraga 1 menit"). Bila diisi, ditambahkan sebagai baris kedua di notifikasi & pop-up.
-    var preAzanMessage = ""
-    var postAzanMessage = ""
-
-    private func appended(_ base: String, _ extra: String) -> String {
-        let trimmed = extra.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? base : base + "\n" + trimmed
-    }
-    func preBody(base: String) -> String { appended(base, preAzanMessage) }
-    func postBody(base: String) -> String { appended(base, postAzanMessage) }
+    /// Pesan tambahan opsional per waktu sholat untuk fase pra/pasca-azan (mis. "Baca 5
+    /// ayat Quran", "Olahraga 1 menit"). Bila diisi, jadi baris kedua di notifikasi & pop-up.
+    var preAzanMessages: [String: String] = [:]
+    var postAzanMessages: [String: String] = [:]
 
     /// Pengingat sholat Jumat (PRD F3, `MJumat`): notifikasi 2 jam & 1 jam sebelum
     /// Dzuhur pada hari Jumat untuk persiapan Jumatan.
@@ -32,8 +25,38 @@ struct ReminderSettings: Codable, Equatable {
     /// mode fokus, karena notifikasi OS macOS selalu di pojok kanan atas.
     var centerAlertEnabled = true
 
+    init() {}
+
+    // Decoder toleran: field baru boleh absen dari setting lama di UserDefaults, agar
+    // penambahan fitur tidak me-reset setelan pengguna.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = ReminderSettings()
+        preAzanEnabled = try c.decodeIfPresent(Bool.self, forKey: .preAzanEnabled) ?? d.preAzanEnabled
+        preAzanMinutes = try c.decodeIfPresent(Int.self, forKey: .preAzanMinutes) ?? d.preAzanMinutes
+        postAzanEnabled = try c.decodeIfPresent(Bool.self, forKey: .postAzanEnabled) ?? d.postAzanEnabled
+        postAzanMinutes = try c.decodeIfPresent(Int.self, forKey: .postAzanMinutes) ?? d.postAzanMinutes
+        enabledPrayers = try c.decodeIfPresent([String: Bool].self, forKey: .enabledPrayers) ?? d.enabledPrayers
+        preAzanMessages = try c.decodeIfPresent([String: String].self, forKey: .preAzanMessages) ?? d.preAzanMessages
+        postAzanMessages = try c.decodeIfPresent([String: String].self, forKey: .postAzanMessages) ?? d.postAzanMessages
+        fridayEnabled = try c.decodeIfPresent(Bool.self, forKey: .fridayEnabled) ?? d.fridayEnabled
+        fridayHoursBefore = try c.decodeIfPresent([Int].self, forKey: .fridayHoursBefore) ?? d.fridayHoursBefore
+        centerAlertEnabled = try c.decodeIfPresent(Bool.self, forKey: .centerAlertEnabled) ?? d.centerAlertEnabled
+    }
+
     func isEnabled(_ prayer: PrayerName) -> Bool {
         enabledPrayers[prayer.rawValue] ?? true
+    }
+
+    private func appended(_ base: String, _ extra: String) -> String {
+        let trimmed = extra.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? base : base + "\n" + trimmed
+    }
+    func preBody(base: String, prayer: PrayerName) -> String {
+        appended(base, preAzanMessages[prayer.rawValue] ?? "")
+    }
+    func postBody(base: String, prayer: PrayerName) -> String {
+        appended(base, postAzanMessages[prayer.rawValue] ?? "")
     }
 }
 
@@ -85,7 +108,7 @@ final class ReminderEngine: NSObject {
                 if preTime > now {
                     add(id: "pre-\(prayer.rawValue)-\(dayTag)",
                         title: l.preTitle(name),
-                        body: reminders.preBody(base: l.preBody(reminders.preAzanMinutes, name)),
+                        body: reminders.preBody(base: l.preBody(reminders.preAzanMinutes, name), prayer: prayer),
                         at: preTime, azan: false)
                 }
             }
@@ -100,7 +123,7 @@ final class ReminderEngine: NSObject {
                 if postTime > now && time > now {
                     add(id: "post-\(prayer.rawValue)-\(dayTag)",
                         title: l.postTitle(name),
-                        body: reminders.postBody(base: l.postBody(name, reminders.postAzanMinutes)),
+                        body: reminders.postBody(base: l.postBody(name, reminders.postAzanMinutes), prayer: prayer),
                         at: postTime, azan: false)
                 }
             }

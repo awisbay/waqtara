@@ -20,9 +20,9 @@ product spec (in Indonesian).
   toggled independently.
 - **Friday prayer reminders** — on Fridays, extra notifications 2 hours and 1 hour before
   Dhuhr to prepare for Jumu'ah.
-- **Custom reminder messages** — add your own line to the before/after-adhan reminders
-  (e.g. "Read 5 verses of Quran", "Exercise for 1 minute"); it shows in both the
-  notification and the center pop-up.
+- **Custom reminder messages** — add your own line to the before/after-adhan reminders,
+  **per prayer** (e.g. after Fajr "Read 5 verses of Quran", after Dhuhr "Exercise for 1
+  minute"); it shows in both the notification and the center pop-up.
 - **Center-screen pop-up** — an optional in-app alert drawn in the middle of the screen at
   prayer time (and Friday reminders), to cut through focus mode. Standard macOS
   notifications can only appear top-right; this is a window the app draws itself.
