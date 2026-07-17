@@ -28,7 +28,7 @@ struct AppSettings: Codable, Equatable {
     var azanEnabled: Bool = true      // mode senyap global: false = notifikasi saja
     var azanVolume: Double = 0.8
     var launchAtLogin: Bool = true
-    var language: AppLanguage = .indonesian
+    var language: AppLanguage = .english
 
     init() {}
 

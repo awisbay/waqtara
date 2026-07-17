@@ -22,6 +22,10 @@ SOFTWARE.
 
 ---
 
-Audio azan bawaan (Sources/WaqtaraApp/Resources/) berasal dari Internet Archive
-dan berada di domain publik / CC0 — lihat README.md untuk sumbernya. Lisensi MIT
-di atas berlaku untuk kode; file audio mengikuti lisensi asalnya masing-masing.
+The MIT license above covers the source code. Bundled data and assets keep their
+own licenses:
+
+- City coordinates (Sources/WaqtaraCore/Resources/cities.json) are derived from the
+  GeoNames cities15000 dataset, licensed CC BY 4.0 (https://www.geonames.org/).
+- The bundled adhan audio (Sources/WaqtaraApp/Resources/) follows the license of its
+  source — see README.md.

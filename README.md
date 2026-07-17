@@ -1,40 +1,97 @@
 # Waqtara
 
-Aplikasi menu bar macOS pengingat waktu sholat. Lihat [PRD-Waqtara.md](PRD-Waqtara.md).
+A macOS menu bar app that reminds you of Islamic prayer times — offline, accurate
+(Kemenag/Indonesia by default), bilingual (English/Indonesian). Inspired by the
+Windows classic **Shollu** by Ebta Setiawan, but stripped down to the one thing that
+matters: a reliable prayer reminder. See [PRD-Waqtara.md](PRD-Waqtara.md) for the full
+product spec (in Indonesian).
 
-## Status
+## Features
 
-- ✅ **Milestone 1 — Inti kalkulasi**: `WaqtaraCore` (adhan-swift, preset Kemenag Fajr 20°/Isya 18°, custom angle, madhab, offset ikhtiyati, pembulatan) + `waqtara-cli`. Akurasi tervalidasi ≤1 menit vs jadwal Kemenag (fixture 5 kota × 5 tanggal 2026, sumber api.myquran.com/bimasislam).
-- ✅ **Milestone 2 — Menu bar shell**: `WaqtaraApp` (MenuBarExtra + panel jadwal + countdown + Hijriyah + Settings lokasi/metode/offset), database ~90 kota (`cities.json`).
-- ✅ **Milestone 3 — Mesin reminder**: notifikasi 3 fase via UNNotificationRequest (pra-azan, azan dengan tombol [Stop Azan], pasca-azan), toggle per waktu sholat, notifikasi ringkas untuk waktu terlewat saat sleep, rekalkulasi tengah malam + wake, tombol Uji Notifikasi, bundling `.app` (`Scripts/make-app.sh` → `dist/Waqtara.app`, ad-hoc signed).
-- ✅ **Milestone 4 — Azan & polesan**: AVAudioPlayer dengan 2 audio azan bawaan (public domain/CC0 dari Internet Archive), pemutaran tepat waktu via timer presisi (tidak diputar jika telat >60 dtk, mis. habis sleep), Stop dari notifikasi/panel/Settings, volume independen, mode senyap, ikon menu bar berubah saat azan, launch at login (SMAppService), onboarding 3 langkah (deteksi lokasi CoreLocation / pilih kota + izin notifikasi + uji azan).
-- ⏭️ **Milestone 5 — Rilis v1.0** (ikon app, Developer ID signing + notarization, .dmg, landing page, uji 7 hari).
+- **Offline prayer time calculation** — computed locally with
+  [adhan-swift](https://github.com/batoulapps/adhan-swift). Kemenag Indonesia preset by
+  default (Fajr 20°, Isha 18°), plus Muslim World League, Karachi, ISNA, Umm al-Qura,
+  Egyptian, and a custom-angle option. Selectable Asr madhab, per-prayer precaution
+  (ihtiyati) offsets, and rounding. No network required, ever.
+- **Menu bar presence** — an icon with a live countdown ("Asr −00:42"), a dropdown panel
+  with today's six times, the Gregorian + Hijri date, and the active location.
+- **Three-phase reminders** — a pre-adhan heads-up, the adhan itself (with a *Stop Adhan*
+  notification action), and a post-adhan follow-up. Each phase and each prayer can be
+  toggled independently.
+- **Adhan playback** — bundled audio, played precisely on time; skipped if it would fire
+  late (e.g. right after the Mac wakes). Independent volume, silent mode, stop from the
+  notification / panel / Settings.
+- **~1,700 cities** worldwide (all Indonesian cities + major world cities and capitals),
+  bundled offline. Optional one-time location auto-detect via CoreLocation.
+- **Launch at login**, a 3-step onboarding, and full **English / Indonesian** UI
+  (English is the default).
 
-## Kalibrasi Kemenag
+## Build & run
 
-Ikhtiyati default hasil kalibrasi terhadap bimasislam: Shubuh +2, Terbit −4, Dzuhur +3, Ashar +2, Maghrib +3, Isya +2, dengan pembulatan **ke atas** — berbeda dari asumsi awal PRD (Dzuhur/Maghrib +2 saja).
-
-## Build & jalankan
+Requires a full Xcode install (not just Command Line Tools).
 
 ```bash
-swift test                 # unit test termasuk akurasi Kemenag
-swift run waqtara-cli      # jadwal Jakarta hari ini
+swift test                 # unit tests, incl. Kemenag accuracy check
+swift run waqtara-cli      # print today's schedule for Jakarta
 swift run waqtara-cli -7.25 112.75 Asia/Jakarta Surabaya 2026-06-01
-./Scripts/make-app.sh && open dist/Waqtara.app   # app menu bar (notifikasi butuh .app bundle)
+
+./Scripts/make-app.sh      # assemble dist/Waqtara.app (notifications require an .app bundle)
+./Scripts/make-dmg.sh      # build a distributable dist/Waqtara-<version>.dmg
+open dist/Waqtara.app
 ```
 
-Butuh Xcode penuh (bukan hanya Command Line Tools) untuk milestone selanjutnya (bundle, signing, notarization).
+## Installing locally (no App Store)
 
-## Audio azan bawaan
+Waqtara ships outside the App Store — the macOS equivalent of a Windows `.exe` is the
+`.app` bundle, distributed via a `.dmg` (or zip) you can share over Drive, etc.
 
-| File | Sumber | Lisensi |
-|---|---|---|
-| `azan-standard.mp3` | [AzanNaifIshaAzan](https://archive.org/details/AzanNaifIshaAzan) | Public domain |
-| `azan-shubuh.mp3` | [MakkahAzan_20171111](https://archive.org/details/MakkahAzan_20171111) | CC0 |
+- **On your own Mac:** just copy it in — `cp -R dist/Waqtara.app /Applications/` — then
+  launch once. With *Launch at login* on (default), it starts itself thereafter.
+- **On someone else's Mac:** because the app is only ad-hoc signed (not yet notarized by
+  Apple), Gatekeeper warns on first open. They clear it once via **System Settings →
+  Privacy & Security → Open Anyway** (or `xattr -d com.apple.quarantine
+  /Applications/Waqtara.app`). Wider, warning-free distribution needs an Apple Developer
+  ID + notarization — still no App Store required.
 
-Catatan: belum ditemukan rekaman azan Shubuh (dengan tarji') berlisensi bebas; slot Shubuh
-sementara diisi azan Makkah CC0. Ganti file di `Sources/WaqtaraApp/Resources/` bila menemukan
-yang lebih tepat (nama file tetap).
+## Accuracy & the city database
 
-Keterbatasan diketahui: audio ducking system-wide tidak tersedia di macOS (API-nya khusus iOS),
-jadi acceptance criteria "aplikasi lain di-duck" diganti volume azan independen.
+Prayer times are computed offline from each city's coordinates, so accuracy depends on
+those coordinates matching Kemenag's reference point. The default precaution offsets were
+calibrated against the official bimasislam schedule (Fajr +2, Sunrise −4, Dhuhr +3,
+Asr +2, Maghrib +3, Isha +2, rounding **up**).
+
+- For the five calibration cities (Jakarta, Surabaya, Medan, Makassar, Tangerang Selatan)
+  the result is within **≤1 minute** of Kemenag on the tested dates (see the unit test).
+- Across the broader bundled database, spot checks land within **~1–5 minutes**. Users can
+  fine-tune any city with the per-prayer ihtiyati offsets in Settings.
+
+The city database (`Sources/WaqtaraCore/Resources/cities.json`) is generated from the
+[GeoNames](https://www.geonames.org/) `cities15000` dataset (licensed CC BY 4.0):
+
+```bash
+# dev-time only; the produced JSON is bundled so the app stays fully offline
+curl -sL -o cities15000.zip https://download.geonames.org/export/dump/cities15000.zip
+unzip cities15000.zip
+python3 Scripts/generate-cities.py cities15000.txt Sources/WaqtaraCore/Resources/cities.json
+```
+
+## Bundled adhan audio
+
+`Sources/WaqtaraApp/Resources/azan-standard.mp3` and `azan-shubuh.mp3` hold the adhan
+played at prayer times (Fajr uses the `-shubuh` file, other prayers use `-standard`).
+Replace either file in place (keep the names) to use your own recording.
+
+## Known limitations
+
+- System-wide audio ducking is not available on macOS (that API is iOS-only), so the
+  adhan plays at an independent volume rather than lowering other apps.
+- The app is ad-hoc signed; notarization is pending (Milestone 5).
+
+## Attribution
+
+- Prayer time engine: [adhan-swift](https://github.com/batoulapps/adhan-swift) (MIT)
+- City coordinates: [GeoNames](https://www.geonames.org/) (CC BY 4.0)
+- Kemenag accuracy reference: [api.myquran.com](https://api.myquran.com) / bimasislam
+- Concept inspiration: Shollu by Ebta Setiawan
+
+Licensed under the [MIT License](LICENSE).
