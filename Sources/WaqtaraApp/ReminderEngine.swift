@@ -11,6 +11,15 @@ struct ReminderSettings: Codable, Equatable {
     /// Toggle per waktu sholat (default semua aktif).
     var enabledPrayers: [String: Bool] = [:]
 
+    /// Pengingat sholat Jumat (PRD F3, `MJumat`): notifikasi 2 jam & 1 jam sebelum
+    /// Dzuhur pada hari Jumat untuk persiapan Jumatan.
+    var fridayEnabled = true
+    var fridayHoursBefore: [Int] = [2, 1]
+
+    /// Pop-up di tengah layar saat waktu sholat tiba (dan pengingat Jumat) — menembus
+    /// mode fokus, karena notifikasi OS macOS selalu di pojok kanan atas.
+    var centerAlertEnabled = true
+
     func isEnabled(_ prayer: PrayerName) -> Bool {
         enabledPrayers[prayer.rawValue] ?? true
     }
@@ -82,6 +91,20 @@ final class ReminderEngine: NSObject {
                         body: l.postBody(name, reminders.postAzanMinutes),
                         at: postTime, azan: false)
                 }
+            }
+        }
+
+        // Pengingat Jumat: N jam sebelum Dzuhur pada hari Jumat.
+        if reminders.fridayEnabled {
+            let dhuhr = schedule.time(for: .dzuhur)
+            let dayTag = ISO8601DateFormatter.dayTag(for: dhuhr)
+            let times = FridayReminder.times(dhuhr: dhuhr, hoursBefore: reminders.fridayHoursBefore,
+                                             timeZone: schedule.location.timeZone)
+            for (h, t) in zip(reminders.fridayHoursBefore, times) where t > now {
+                add(id: "friday-\(h)-\(dayTag)",
+                    title: l.fridayTitle,
+                    body: l.fridayBody(h),
+                    at: t, azan: false)
             }
         }
     }

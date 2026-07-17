@@ -18,6 +18,11 @@ product spec (in Indonesian).
 - **Three-phase reminders** — a pre-adhan heads-up, the adhan itself (with a *Stop Adhan*
   notification action), and a post-adhan follow-up. Each phase and each prayer can be
   toggled independently.
+- **Friday prayer reminders** — on Fridays, extra notifications 2 hours and 1 hour before
+  Dhuhr to prepare for Jumu'ah.
+- **Center-screen pop-up** — an optional in-app alert drawn in the middle of the screen at
+  prayer time (and Friday reminders), to cut through focus mode. Standard macOS
+  notifications can only appear top-right; this is a window the app draws itself.
 - **Adhan playback** — bundled audio, played precisely on time; skipped if it would fire
   late (e.g. right after the Mac wakes). Independent volume, silent mode, stop from the
   notification / panel / Settings.

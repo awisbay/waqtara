@@ -80,6 +80,10 @@ struct L {
     func minutesAfter(_ n: Int) -> String { t("\(n) menit sesudah azan", "\(n) minutes after adhan") }
     var perPrayerSection: String { t("Reminder per waktu sholat", "Reminders per prayer") }
     var testNotification: String { t("Uji Notifikasi", "Test Notification") }
+    var fridaySection: String { t("Sholat Jumat", "Friday Prayer") }
+    var fridayToggle: String { t("Pengingat Jumat (2 jam & 1 jam sebelum Dzuhur)", "Friday reminder (2h & 1h before Dhuhr)") }
+    var centerAlertToggle: String { t("Pop-up di tengah layar saat waktu sholat", "Center-screen pop-up at prayer time") }
+    var testCenterAlert: String { t("Uji Pop-up", "Test Pop-up") }
     var notifPermissionWarning: String {
         t("⚠️ Izin notifikasi belum diberikan — buka System Settings → Notifications → Waqtara.",
           "⚠️ Notification permission not granted — open System Settings → Notifications → Waqtara.")
@@ -123,6 +127,12 @@ struct L {
     func missedBody(_ prayer: String, _ time: String) -> String {
         t("Waktu \(prayer) telah masuk pukul \(time)", "\(prayer) time began at \(time)")
     }
+    var fridayTitle: String { t("Persiapan Sholat Jumat", "Friday Prayer") }
+    func fridayBody(_ hours: Int) -> String {
+        t("Sekitar \(hours) jam lagi menuju sholat Jumat — persiapkan diri.",
+          "Jumu'ah is in about \(hours) hour\(hours == 1 ? "" : "s") — prepare yourself.")
+    }
+    var dismiss: String { t("Tutup", "Dismiss") }
     var testNotifTitle: String { t("Uji Notifikasi Waqtara", "Waqtara Test Notification") }
     func testNotifBody(_ city: String) -> String {
         t("Telah masuk waktu Ashar untuk wilayah \(city) (simulasi)", "It is now time for Asr in \(city) (simulation)")

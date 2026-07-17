@@ -108,6 +108,23 @@ final class PrayerTimeCalculatorTests: XCTestCase {
         XCTAssertFalse(db.search("SURABAYA").isEmpty)
     }
 
+    func testFridayReminderOnlyOnFriday() throws {
+        let tz = TimeZone(identifier: "Asia/Jakarta")!
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
+        let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd HH:mm"; df.timeZone = tz
+
+        // 2026-07-17 is a Friday; Dhuhr 12:00 → reminders at 10:00 and 11:00.
+        let friday = df.date(from: "2026-07-17 12:00")!
+        let times = FridayReminder.times(dhuhr: friday, hoursBefore: [2, 1], timeZone: tz)
+        XCTAssertEqual(times.count, 2)
+        XCTAssertEqual(cal.dateComponents([.hour], from: times[0]).hour, 10)
+        XCTAssertEqual(cal.dateComponents([.hour], from: times[1]).hour, 11)
+
+        // 2026-07-16 is a Thursday → no reminders.
+        let thursday = df.date(from: "2026-07-16 12:00")!
+        XCTAssertTrue(FridayReminder.times(dhuhr: thursday, hoursBefore: [2, 1], timeZone: tz).isEmpty)
+    }
+
     /// Preset default per negara: Indonesia → Kemenag (dengan ikhtiyati & round up),
     /// negara lain → MWL tanpa ikhtiyati & round nearest. Madhab dipertahankan.
     func testRegionalPreset() {

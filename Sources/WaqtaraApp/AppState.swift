@@ -88,6 +88,7 @@ final class AppState: ObservableObject {
 
     private var tickTimer: Timer?
     private var azanTimer: Timer?
+    private var fridayTimers: [Timer] = []
     private var wakeObserver: NSObjectProtocol?
     private var sleepObserver: NSObjectProtocol?
     private var playerSink: AnyCancellable?
@@ -176,30 +177,74 @@ final class AppState: ObservableObject {
                                       reminders: settings.reminders,
                                       locationName: settings.location.name, l: l)
         }
-        armAzanTimer()
+        armPrayerTimer()
+        armFridayTimers()
     }
 
-    /// Timer presisi satu-tembakan untuk memutar azan pada waktu sholat berikutnya.
-    /// (UNNotification menangani banner; audio penuh diputar oleh app sendiri.)
-    private func armAzanTimer() {
+    /// Timer presisi satu-tembakan pada waktu sholat berikutnya: memutar azan (jika aktif)
+    /// dan menampilkan pop-up tengah layar (jika aktif). Selalu re-arm lewat recalculate.
+    /// (UNNotification menangani banner OS; audio & pop-up diputar oleh app sendiri.)
+    private func armPrayerTimer() {
         azanTimer?.invalidate()
-        guard settings.azanEnabled, let next = nextPrayer,
-              settings.reminders.isEnabled(next.name) else { return }
-        let interval = next.time.timeIntervalSinceNow
-        guard interval > 0 else { return }
+        guard let next = nextPrayer, next.time.timeIntervalSinceNow > 0 else { return }
         let prayer = next.name
         let scheduledTime = next.time
         azanTimer = Timer(fire: next.time, interval: 0, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                // Jangan putar azan telat (mis. timer tertahan karena sleep) — cegah azan dobel/telat.
-                if abs(Date().timeIntervalSince(scheduledTime)) < 60 {
-                    self.azanPlayer.play(for: prayer, volume: self.settings.azanVolume)
+                // Jangan bertindak jika telat (mis. timer tertahan karena sleep) — cegah azan telat.
+                let onTime = abs(Date().timeIntervalSince(scheduledTime)) < 60
+                if onTime, self.settings.reminders.isEnabled(prayer) {
+                    if self.settings.azanEnabled {
+                        self.azanPlayer.play(for: prayer, volume: self.settings.azanVolume)
+                    }
+                    if self.settings.reminders.centerAlertEnabled {
+                        self.showAzanCenterAlert(prayer: prayer)
+                    }
                 }
                 self.recalculate()  // re-arm untuk waktu berikutnya
             }
         }
         RunLoop.main.add(azanTimer!, forMode: .common)
+    }
+
+    private func showAzanCenterAlert(prayer: PrayerName) {
+        let name = prayerName(prayer)
+        CenterAlert.show(
+            title: l.azanTitle(name),
+            message: l.azanBody(name, settings.location.name),
+            systemImage: "moon.stars.fill",
+            accent: .orange,
+            stopTitle: azanPlayer.isPlaying ? l.stopAzan : nil,
+            onStop: { [weak self] in self?.azanPlayer.stop() },
+            dismissTitle: l.dismiss)
+    }
+
+    /// Pop-up tengah layar untuk pengingat Jumat (2 jam & 1 jam sebelum Dzuhur).
+    private func armFridayTimers() {
+        fridayTimers.forEach { $0.invalidate() }
+        fridayTimers = []
+        guard settings.reminders.fridayEnabled, settings.reminders.centerAlertEnabled,
+              let schedule else { return }
+        let dhuhr = schedule.time(for: .dzuhur)
+        let times = FridayReminder.times(dhuhr: dhuhr, hoursBefore: settings.reminders.fridayHoursBefore,
+                                         timeZone: settings.location.timeZone)
+        for (h, t) in zip(settings.reminders.fridayHoursBefore, times) {
+            guard t.timeIntervalSinceNow > 0 else { continue }
+            let hours = h
+            let timer = Timer(fire: t, interval: 0, repeats: false) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self else { return }
+                    CenterAlert.show(title: self.l.fridayTitle,
+                                     message: self.l.fridayBody(hours),
+                                     systemImage: "figure.walk",
+                                     accent: .green,
+                                     dismissTitle: self.l.dismiss)
+                }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            fridayTimers.append(timer)
+        }
     }
 
     // MARK: - Derivasi tampilan

@@ -15,6 +15,7 @@ struct WaqtaraApp: App {
     var body: some Scene {
         // Mode uji dari CLI: `Waqtara --test-azan` memutar azan 5 detik lalu keluar.
         let _ = Self.runTestAzanIfRequested(state: state)
+        let _ = Self.runTestAlertIfRequested(state: state)
         MenuBarExtra {
             PanelView().environmentObject(state)
         } label: {
@@ -51,6 +52,23 @@ struct WaqtaraApp: App {
             DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                 NSLog("AzanPlayer: isPlaying=%@", state.azanPlayer.isPlaying ? "true" : "false")
                 exit(state.azanPlayer.isPlaying ? 0 : 1)
+            }
+        }
+    }
+
+    private static var alertTestStarted = false
+    @MainActor
+    static func runTestAlertIfRequested(state: AppState) {
+        guard CommandLine.arguments.contains("--test-alert"), !alertTestStarted else { return }
+        alertTestStarted = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            CenterAlert.show(title: state.l.azanTitle("Dhuhr"),
+                             message: state.l.azanBody("Dhuhr", "Jakarta"),
+                             systemImage: "moon.stars.fill", accent: .orange,
+                             dismissTitle: state.l.dismiss)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                NSLog("CenterAlert: shown OK")
+                exit(0)
             }
         }
     }

@@ -127,6 +127,18 @@ struct ReminderSettingsView: View {
                     ))
                 }
             }
+            Section(state.l.fridaySection) {
+                Toggle(state.l.fridayToggle, isOn: $state.settings.reminders.fridayEnabled)
+            }
+            Section {
+                Toggle(state.l.centerAlertToggle, isOn: $state.settings.reminders.centerAlertEnabled)
+                Button(state.l.testCenterAlert) {
+                    CenterAlert.show(title: state.l.azanTitle(state.prayerName(.dzuhur)),
+                                     message: state.l.azanBody(state.prayerName(.dzuhur), state.settings.location.name),
+                                     systemImage: "moon.stars.fill", accent: .orange,
+                                     dismissTitle: state.l.dismiss)
+                }
+            }
             Section {
                 Button(state.l.testNotification) {
                     state.reminderEngine.sendTestNotification(locationName: state.settings.location.name, l: state.l)

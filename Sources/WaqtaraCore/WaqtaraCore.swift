@@ -53,6 +53,17 @@ public struct PrayerAdjustmentsMinutes: Codable, Equatable, Sendable {
     }
 }
 
+/// Pengingat sholat Jumat (PRD F3, `MJumat`): waktu-waktu N jam sebelum Dzuhur,
+/// hanya jika Dzuhur jatuh pada hari Jumat.
+public enum FridayReminder {
+    public static func times(dhuhr: Date, hoursBefore: [Int], timeZone: TimeZone) -> [Date] {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = timeZone
+        guard cal.component(.weekday, from: dhuhr) == 6 else { return [] }  // 6 = Jumat
+        return hoursBefore.map { dhuhr.addingTimeInterval(-Double($0) * 3600) }
+    }
+}
+
 public struct Location: Codable, Equatable, Sendable {
     public var name: String
     public var latitude: Double
